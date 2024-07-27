@@ -1,27 +1,29 @@
-use std::fmt::Display;
-
-trait MyToString {
-    fn to_string(&self) -> String;
+struct FibIter {
+    prev: u64,
+    next: u64,
 }
 
-impl MyToString for u32 {
-    fn to_string(&self) -> String {
-        String::from("the type is u32")
+impl FibIter {
+    pub fn new() -> Self {
+        // 1 1 2 3 5
+        FibIter { prev: 0, next: 1 }
     }
 }
 
-impl MyToString for u64 {
-    fn to_string(&self) -> String {
-        String::from("the type is u64")
-    }
-}
+impl Iterator for FibIter {
+    type Item = u64;
 
-fn use_something_with_my_to_string<T: MyToString + Display>(s: T) -> T {
-    println!("{s}: {}", s.to_string());
-    s
+    fn next(&mut self) -> Option<Self::Item> {
+        let next = self.prev + self.next;
+        self.prev = self.next;
+        self.next = next;
+        Some(self.prev)
+    }
 }
 
 fn main() {
-    let x = use_something_with_my_to_string(12u64);
-    let x = use_something_with_my_to_string(14u32);
+    for (i, n) in FibIter::new().take(5).enumerate() {
+        println!("Fib({}) = {n}", i + 1);
+    }
+    println!("exited...");
 }
