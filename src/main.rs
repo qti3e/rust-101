@@ -3,15 +3,13 @@
 // borrow: &T
 
 pub struct VecIterMut<'a, T: 'a> {
-    // &'mut [T], &'mut [T...]
-    slice: &'a mut [T],
+    index: usize,
+    vec: &'a mut Vec<T>,
 }
 
 impl<'a, T: 'a> VecIterMut<'a, T> {
     pub fn new(vec: &'a mut Vec<T>) -> Self {
-        Self {
-            slice: vec.as_mut_slice(),
-        }
+        Self { index: 0, vec }
     }
 }
 
@@ -22,23 +20,31 @@ where
     type Item = &'a mut T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.slice.is_empty() {
+        if self.index >= self.vec.len() {
             return None;
         }
 
-        let old_slice = std::mem::replace(&mut self.slice, &mut []);
-        let (left, right) = old_slice.split_at_mut(1);
-
-        self.slice = right;
-
-        Some(&mut left[0])
+        let index = self.index;
+        self.index += 1;
+        // why does this not work?
+        // imagine the prev line was commented out.
+        Some(&mut self.vec[index]) // &mut 2
     }
 }
 
 fn main() {
     let mut vec = vec![2, 7, 11, 15];
+    let mut iter = VecIterMut::new(&mut vec);
+    let x1 = iter.next().unwrap();
+    let x2 = iter.next().unwrap();
+    dbg!(x1, x2); // &mut 2, &mut 2 // -> now we have 2 mutable access to the same value
+                  // this violates the borrow checker.
+
     for x in VecIterMut::new(&mut vec) {
+        // x == &mut 2
+        // x == &mut 2
         *x += 1;
     }
+
     dbg!(vec);
 }
