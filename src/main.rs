@@ -1,37 +1,25 @@
 use std::sync::mpsc;
 
 fn main() {
-    let (tx1, rx1) = mpsc::channel::<()>();
-    let (tx2, rx2) = mpsc::channel::<()>();
+    let (tx, rx) = mpsc::channel::<i32>();
 
-    let h1 = std::thread::spawn(move || {
-        for i in 0..100 {
-            // ->h2: hey print something.
-            // -> wait for h2's command.
+    let handle = std::thread::spawn(move || loop {
+        let data = rx.recv();
 
-            tx2.send(()).unwrap();
-            rx1.recv().unwrap();
+        dbg!(&data);
 
-            println!("A {i}");
+        if data.is_err() {
+            break;
         }
     });
 
-    let h2 = std::thread::spawn(move || {
-        for i in 0..100 {
-            // -> wait for h1's command.
-            rx2.recv().unwrap();
-            println!("B {i}");
-            tx1.send(()).unwrap();
-            // ->h1: print something
-        }
-    });
+    for i in 0..100 {
+        tx.send(i).unwrap();
+    }
 
-    // ...
-    // for i in 0..100 {
-    //     println!("Z {i}");
-    // }
+    drop(tx);
 
-    h1.join().unwrap();
-    h2.join().unwrap();
+    handle.join().unwrap();
+
+    // exit...
 }
-
