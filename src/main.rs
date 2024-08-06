@@ -1,25 +1,25 @@
-use std::sync::mpsc;
+use std::{future::Future, time::Duration};
 
-fn main() {
-    let (tx, rx) = mpsc::channel::<i32>();
+async fn foo() -> i32 {
+    println!("Foooooooooooo");
+    tokio::time::sleep(Duration::from_secs(3)).await;
+    3
+}
 
-    let handle = std::thread::spawn(move || loop {
-        let data = rx.recv();
+fn bar() -> impl Future<Output = i32> {
+    println!("Barrrrrrrrrrrr");
 
-        dbg!(&data);
-
-        if data.is_err() {
-            break;
-        }
-    });
-
-    for i in 0..100 {
-        tx.send(i).unwrap();
+    async {
+        println!("Barr asynccccc");
+        3
     }
+}
 
-    drop(tx);
+#[tokio::main]
+async fn main() {
+    let fut1 = foo();
+    let fut2 = bar();
 
-    handle.join().unwrap();
-
-    // exit...
+    fut1.await;
+    fut2.await;
 }
