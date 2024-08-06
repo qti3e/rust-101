@@ -1,25 +1,28 @@
-use std::{future::Future, time::Duration};
-
-async fn foo() -> i32 {
-    println!("Foooooooooooo");
-    tokio::time::sleep(Duration::from_secs(3)).await;
-    3
-}
-
-fn bar() -> impl Future<Output = i32> {
-    println!("Barrrrrrrrrrrr");
-
-    async {
-        println!("Barr asynccccc");
-        3
-    }
-}
+use std::time::{Duration, Instant};
+use tokio::signal::ctrl_c;
+use tokio::time::sleep;
 
 #[tokio::main]
 async fn main() {
-    let fut1 = foo();
-    let fut2 = bar();
+    let started = Instant::now();
 
-    fut1.await;
-    fut2.await;
+    tokio::spawn(async move {
+        foo(started).await;
+    });
+
+    tokio::spawn(async move {
+        bar(started).await;
+    });
+
+    ctrl_c().await.unwrap();
+}
+
+async fn foo(started: Instant) {
+    sleep(Duration::from_secs(3)).await;
+    println!("Foooo {:?}", started.elapsed());
+}
+
+async fn bar(started: Instant) {
+    sleep(Duration::from_secs(2)).await;
+    println!("Barrrrrrr {:?}", started.elapsed());
 }
