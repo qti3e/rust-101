@@ -1,28 +1,28 @@
 use std::time::{Duration, Instant};
-use tokio::signal::ctrl_c;
 use tokio::time::sleep;
 
 #[tokio::main]
 async fn main() {
     let started = Instant::now();
 
-    tokio::spawn(async move {
-        foo(started).await;
-    });
-
-    tokio::spawn(async move {
-        bar(started).await;
-    });
-
-    ctrl_c().await.unwrap();
+    tokio::select! {
+        a = foo(started) => {
+            println!("Foo returned {}", a);
+        },
+        b = bar(started) => {
+            println!("Bar returned {}", b);
+        }
+    }
 }
 
-async fn foo(started: Instant) {
+async fn foo(started: Instant) -> i32 {
     sleep(Duration::from_secs(3)).await;
     println!("Foooo {:?}", started.elapsed());
+    3
 }
 
-async fn bar(started: Instant) {
+async fn bar(started: Instant) -> i32 {
     sleep(Duration::from_secs(2)).await;
     println!("Barrrrrrr {:?}", started.elapsed());
+    5
 }
