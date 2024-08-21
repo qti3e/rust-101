@@ -1,28 +1,26 @@
-use std::time::{Duration, Instant};
-use tokio::time::sleep;
+use serde::{Deserialize, Serialize};
 
-#[tokio::main]
-async fn main() {
-    let started = Instant::now();
-
-    tokio::select! {
-        a = foo(started) => {
-            println!("Foo returned {}", a);
-        },
-        b = bar(started) => {
-            println!("Bar returned {}", b);
-        }
-    }
+#[derive(Serialize, Deserialize, Debug)]
+struct Response {
+    code: u32,
+    message: String,
 }
 
-async fn foo(started: Instant) -> i32 {
-    sleep(Duration::from_secs(3)).await;
-    println!("Foooo {:?}", started.elapsed());
-    3
+#[derive(Serialize, Deserialize, Debug)]
+struct Res2 {
+    code: u32,
 }
 
-async fn bar(started: Instant) -> i32 {
-    sleep(Duration::from_secs(2)).await;
-    println!("Barrrrrrr {:?}", started.elapsed());
-    5
+fn main() {
+    let res = Response {
+        code: 412,
+        message: "I'm early!!!".into(),
+    };
+    dbg!(&res);
+
+    let encoded = serde_json::to_string(&res).unwrap();
+    println!("{encoded}");
+
+    let data = serde_json::from_str::<Res2>(&encoded).unwrap();
+    dbg!(data);
 }
